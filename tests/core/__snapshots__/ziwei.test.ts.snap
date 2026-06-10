@@ -1,0 +1,154 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`computeZiwei > 整盘快照 1`] = `
+{
+  "bodyPalaceBranch": "未",
+  "currentDecadal": "戊寅",
+  "currentYearly": "丙午",
+  "fiveElementsClass": "土五局",
+  "palaces": [
+    {
+      "branch": "寅",
+      "isBodyPalace": false,
+      "majorStars": [
+        "贪狼(平)",
+      ],
+      "minorStars": [],
+      "name": "田宅",
+      "stem": "戊",
+    },
+    {
+      "branch": "卯",
+      "isBodyPalace": false,
+      "majorStars": [
+        "天机(旺)",
+        "巨门(庙)",
+      ],
+      "minorStars": [
+        "地劫",
+      ],
+      "name": "官禄",
+      "stem": "己",
+    },
+    {
+      "branch": "辰",
+      "isBodyPalace": false,
+      "majorStars": [
+        "紫微(得)",
+        "天相(得)",
+      ],
+      "minorStars": [],
+      "name": "仆役",
+      "stem": "庚",
+    },
+    {
+      "branch": "巳",
+      "isBodyPalace": false,
+      "majorStars": [
+        "天梁(陷)",
+      ],
+      "minorStars": [
+        "左辅",
+        "火星(得)",
+      ],
+      "name": "迁移",
+      "stem": "辛",
+    },
+    {
+      "branch": "午",
+      "isBodyPalace": false,
+      "majorStars": [
+        "七杀(旺)",
+      ],
+      "minorStars": [
+        "文昌(陷)",
+      ],
+      "name": "疾厄",
+      "stem": "壬",
+    },
+    {
+      "branch": "未",
+      "isBodyPalace": true,
+      "majorStars": [],
+      "minorStars": [
+        "天钺",
+        "地空",
+        "铃星(利)",
+        "陀罗(庙)",
+      ],
+      "name": "财帛",
+      "stem": "癸",
+    },
+    {
+      "branch": "申",
+      "isBodyPalace": false,
+      "majorStars": [
+        "廉贞(庙)",
+      ],
+      "minorStars": [
+        "文曲(得)",
+        "禄存",
+        "天马",
+      ],
+      "name": "子女",
+      "stem": "甲",
+    },
+    {
+      "branch": "酉",
+      "isBodyPalace": false,
+      "majorStars": [],
+      "minorStars": [
+        "右弼",
+        "擎羊(陷)",
+      ],
+      "name": "夫妻",
+      "stem": "乙",
+    },
+    {
+      "branch": "戌",
+      "isBodyPalace": false,
+      "majorStars": [
+        "破军(旺)",
+      ],
+      "minorStars": [],
+      "name": "兄弟",
+      "stem": "丙",
+    },
+    {
+      "branch": "亥",
+      "isBodyPalace": false,
+      "majorStars": [
+        "天同(庙)[化忌]",
+      ],
+      "minorStars": [],
+      "name": "命宫",
+      "stem": "丁",
+    },
+    {
+      "branch": "子",
+      "isBodyPalace": false,
+      "majorStars": [
+        "武曲(旺)[化权]",
+        "天府(庙)",
+      ],
+      "minorStars": [],
+      "name": "父母",
+      "stem": "戊",
+    },
+    {
+      "branch": "丑",
+      "isBodyPalace": false,
+      "majorStars": [
+        "太阳(不)[化禄]",
+        "太阴(庙)[化科]",
+      ],
+      "minorStars": [
+        "天魁",
+      ],
+      "name": "福德",
+      "stem": "己",
+    },
+  ],
+  "soulPalaceBranch": "亥",
+}
+`;
