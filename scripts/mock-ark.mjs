@@ -1,5 +1,5 @@
 /* 本地 OpenAI 兼容 mock 服务：流式返回固定文本，用于无真实 ARK key 时验证 SSE 管线 */
-const http = require('node:http');
+import http from 'node:http';
 
 const REPLY = '【模拟解读】命主八字庚午年生，日主己土。此为本地 mock 输出，用于验证流式管线。'.split('');
 

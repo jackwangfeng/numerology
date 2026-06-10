@@ -1,36 +1,70 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 玄机命理
 
-## Getting Started
+八字 + 紫微斗数排盘，豆包大模型深度解读的 Web 应用。
 
-First, run the development server:
+- **排盘零自研零误差**：八字四柱由 [lunar-typescript](https://github.com/6tail/lunar-typescript) 计算，紫微十二宫由 [iztro](https://github.com/SylarLong/iztro) 计算；支持公历/农历（含闰月）输入与真太阳时经度校正。大模型只负责解读，不碰历法推算。
+- **AI 解读**：完整结构化命盘（四柱十神藏干、十步大运、流年、紫微十二宫四化）喂给豆包，流式生成六章节解读报告，并支持随盘追问对话。
+- **账号与历史**：邮箱密码登录（better-auth），命盘、报告、对话全部持久化，可随时回看。
+
+## 技术栈
+
+Next.js 15 (App Router) · TypeScript · Tailwind CSS · SQLite + Drizzle ORM · better-auth · 火山方舟 Ark API（OpenAI 兼容）· Vitest
+
+## 启动
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env.local   # 填入下面的环境变量
+mkdir -p data && npm run db:push   # 建表
+npm run dev                  # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 环境变量
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| 变量 | 必填 | 说明 |
+|---|---|---|
+| `ARK_API_KEY` | 是 | 火山方舟 API Key（[控制台](https://console.volcengine.com/ark)创建） |
+| `ARK_MODEL` | 是 | 豆包模型 ID 或推理接入点 ID，如 `doubao-seed-1-6-250615` |
+| `ARK_BASE_URL` | 否 | 默认 `https://ark.cn-beijing.volces.com/api/v3` |
+| `BETTER_AUTH_SECRET` | 是 | 会话签名密钥，`openssl rand -hex 32` 生成 |
+| `BETTER_AUTH_URL` | 是 | 站点地址，本地为 `http://localhost:3000` |
+| `DATABASE_URL` | 否 | SQLite 文件路径，默认 `./data/suanming.db` |
+| `DAILY_LLM_LIMIT` | 否 | 每用户每日 LLM 调用上限，默认 20 |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 没有 ARK key 时本地联调
 
-## Learn More
+```bash
+node scripts/mock-ark.mjs &   # 本地 OpenAI 兼容 mock，端口 9999
+ARK_API_KEY=mock ARK_BASE_URL=http://localhost:9999 npm run dev
+```
 
-To learn more about Next.js, take a look at the following resources:
+## 测试
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm test        # vitest：历法换算/神煞/八字/紫微/prompt/配额，30 个用例
+npm run lint
+npm run build
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+`npx tsx scripts/inspect-libs.ts` 可打印排盘库原始输出，用于与权威排盘工具人工核对。
 
-## Deploy on Vercel
+## 目录结构
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```
+src/core/      排盘胶水层（纯函数）：calendar 历法换算、bazi 八字、ziwei 紫微、shensha 神煞
+src/llm/       prompts 提示词构建、ark 豆包流式客户端、quota 每日配额
+src/db/        Drizzle schema 与连接
+src/lib/       better-auth、会话、SSE 工具
+src/app/       页面与 API 路由（charts CRUD、report/chat SSE）
+src/components/  八字表、紫微十二宫、报告流式渲染、追问对话框
+docs/superpowers/  设计文档与实现计划
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 设计文档
+
+- 设计：`docs/superpowers/specs/2026-06-11-suanming-app-design.md`
+- 实现计划：`docs/superpowers/plans/2026-06-11-suanming-v1.md`
+
+---
+
+应用内所有解读由 AI 基于传统命理学说生成，仅供参考娱乐。
