@@ -1,0 +1,134 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`computeBazi > 整盘快照 1`] = `
+{
+  "currentDaYun": "壬午",
+  "currentLiuNian": "丙午",
+  "daYun": [
+    {
+      "ganZhi": "庚辰",
+      "startAge": 8,
+      "startYear": 1997,
+    },
+    {
+      "ganZhi": "辛巳",
+      "startAge": 18,
+      "startYear": 2007,
+    },
+    {
+      "ganZhi": "壬午",
+      "startAge": 28,
+      "startYear": 2017,
+    },
+    {
+      "ganZhi": "癸未",
+      "startAge": 38,
+      "startYear": 2027,
+    },
+    {
+      "ganZhi": "甲申",
+      "startAge": 48,
+      "startYear": 2037,
+    },
+    {
+      "ganZhi": "乙酉",
+      "startAge": 58,
+      "startYear": 2047,
+    },
+    {
+      "ganZhi": "丙戌",
+      "startAge": 68,
+      "startYear": 2057,
+    },
+    {
+      "ganZhi": "丁亥",
+      "startAge": 78,
+      "startYear": 2067,
+    },
+    {
+      "ganZhi": "戊子",
+      "startAge": 88,
+      "startYear": 2077,
+    },
+    {
+      "ganZhi": "己丑",
+      "startAge": 98,
+      "startYear": 2087,
+    },
+  ],
+  "dayMaster": "己",
+  "lunarDateText": "一九九〇年二月十九",
+  "pillars": {
+    "day": {
+      "gan": "己",
+      "ganZhi": "己卯",
+      "hideGan": [
+        "乙",
+      ],
+      "shiShenGan": "日主",
+      "shiShenZhi": [
+        "七杀",
+      ],
+      "zhi": "卯",
+    },
+    "month": {
+      "gan": "己",
+      "ganZhi": "己卯",
+      "hideGan": [
+        "乙",
+      ],
+      "shiShenGan": "比肩",
+      "shiShenZhi": [
+        "七杀",
+      ],
+      "zhi": "卯",
+    },
+    "time": {
+      "gan": "戊",
+      "ganZhi": "戊辰",
+      "hideGan": [
+        "戊",
+        "乙",
+        "癸",
+      ],
+      "shiShenGan": "劫财",
+      "shiShenZhi": [
+        "劫财",
+        "七杀",
+        "偏财",
+      ],
+      "zhi": "辰",
+    },
+    "year": {
+      "gan": "庚",
+      "ganZhi": "庚午",
+      "hideGan": [
+        "丁",
+        "己",
+      ],
+      "shiShenGan": "伤官",
+      "shiShenZhi": [
+        "偏印",
+        "比肩",
+      ],
+      "zhi": "午",
+    },
+  },
+  "shenSha": [
+    "桃花",
+  ],
+  "solarDateTime": "1990-03-15 08:30:00",
+  "wuXingCount": {
+    "土": 4,
+    "木": 2,
+    "水": 0,
+    "火": 1,
+    "金": 1,
+  },
+  "yun": {
+    "forward": true,
+    "startAge": 8,
+    "startYear": 1997,
+  },
+}
+`;
