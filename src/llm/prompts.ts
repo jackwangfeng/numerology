@@ -41,6 +41,9 @@ export function renderChartText(bazi: BaziChart, ziwei: ZiweiChart, profile: Pro
     `起运：${bazi.yun.startAge} 岁（${bazi.yun.startYear} 年）起，${bazi.yun.forward ? '顺行' : '逆行'}`,
     `大运：${bazi.daYun.map((d) => `${d.ganZhi}(${d.startAge}岁/${d.startYear}年)`).join(' → ')}`,
     `当前大运：${bazi.currentDaYun ?? '未起运'}　当前流年：${bazi.currentLiuNian}`,
+    `未来三年流年（只解读这几年，不要回顾更早的过去年份）：${bazi.upcomingYears
+      .map((y, i) => `${y.year}年(${y.ganZhi}/虚岁${y.age}/大运${y.daYun ?? '未起运'})${i === 0 ? '【今年】' : ''}`)
+      .join('　')}`,
     '',
     '━━ 紫微斗数命盘 ━━',
     `五行局：${ziwei.fiveElementsClass}　命宫：${ziwei.soulPalaceBranch}　身宫：${ziwei.bodyPalaceBranch}`,
@@ -57,8 +60,9 @@ export function renderChartText(bazi: BaziChart, ziwei: ZiweiChart, profile: Pro
 
 export type ChatMessage = { role: 'system' | 'user' | 'assistant'; content: string };
 
-export function buildReportMessages(chartText: string, facts: string[] = []): ChatMessage[] {
+export function buildReportMessages(chartText: string, facts: string[] = [], upcomingYears: number[] = []): ChatMessage[] {
   const factsBlock = facts.length ? `\n\n【命主长期记忆（来自历史咨询，解读时请结合）】\n${facts.join('\n')}` : '';
+  const yearsLabel = upcomingYears.length ? `（${upcomingYears.map((y) => `${y}年`).join('、')}）` : '';
   return [
     { role: 'system', content: SYSTEM_PROMPT },
     {
@@ -71,7 +75,8 @@ export function buildReportMessages(chartText: string, facts: string[] = []): Ch
 ## 事业财运
 ## 婚恋情感
 ## 健康提示
-## 近三年大运流年`,
+## 未来三年运势${yearsLabel}
+按"今年→明年→后年"的顺序逐年分析大运流年，只预测这三年，绝对不要回顾或分析已经过去的年份。`,
     },
   ];
 }

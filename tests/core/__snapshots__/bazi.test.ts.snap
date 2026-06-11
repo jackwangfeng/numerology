@@ -118,6 +118,26 @@ exports[`computeBazi > 整盘快照 1`] = `
     "桃花",
   ],
   "solarDateTime": "1990-03-15 08:30:00",
+  "upcomingYears": [
+    {
+      "age": 37,
+      "daYun": "壬午",
+      "ganZhi": "丙午",
+      "year": 2026,
+    },
+    {
+      "age": 38,
+      "daYun": "癸未",
+      "ganZhi": "丁未",
+      "year": 2027,
+    },
+    {
+      "age": 39,
+      "daYun": "癸未",
+      "ganZhi": "戊申",
+      "year": 2028,
+    },
+  ],
   "wuXingCount": {
     "土": 4,
     "木": 2,

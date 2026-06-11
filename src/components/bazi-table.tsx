@@ -71,9 +71,20 @@ export function BaziTable({ chart }: { chart: BaziChart }) {
         </p>
         <p>
           {chart.yun.startAge} 岁起运（{chart.yun.forward ? '顺行' : '逆行'}）　当前大运：
-          <span className="text-accent">{chart.currentDaYun ?? '未起运'}</span>　流年：
-          <span className="text-accent">{chart.currentLiuNian}</span>
+          <span className="text-accent">{chart.currentDaYun ?? '未起运'}</span>
         </p>
+        {chart.upcomingYears?.length ? (
+          <p>
+            未来三年流年：
+            {chart.upcomingYears.map((y, i) => (
+              <span key={y.year} className="text-accent">
+                {i > 0 && '、'}
+                {y.year} {y.ganZhi}
+                {i === 0 && '（今年）'}
+              </span>
+            ))}
+          </p>
+        ) : null}
         <div className="flex gap-2 overflow-x-auto pt-1">
           {chart.daYun.map((d) => (
             <div

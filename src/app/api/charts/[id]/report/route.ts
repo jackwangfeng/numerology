@@ -22,11 +22,8 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
     return Response.json({ error: `今日解读次数已用完（${quota.limit} 次），明天再来吧` }, { status: 429 });
   }
 
-  const chartText = renderChartText(
-    JSON.parse(chart.baziData) as BaziChart,
-    JSON.parse(chart.ziweiData) as ZiweiChart,
-    { name: chart.name, gender: chart.gender as Gender },
-  );
+  const bazi = JSON.parse(chart.baziData) as BaziChart;
+  const chartText = renderChartText(bazi, JSON.parse(chart.ziweiData) as ZiweiChart, { name: chart.name, gender: chart.gender as Gender });
 
   // 重新生成报告时带上命主事实库，越用越懂命主
   const facts = await db
@@ -36,7 +33,8 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
     .orderBy(desc(chartMemories.createdAt))
     .limit(20);
 
-  return sseResponse(streamChat(buildReportMessages(chartText, facts.map((f) => f.content).reverse())), async (full) => {
+  const upcoming = (bazi.upcomingYears ?? []).map((y) => y.year);
+  return sseResponse(streamChat(buildReportMessages(chartText, facts.map((f) => f.content).reverse(), upcoming)), async (full) => {
     await db.insert(readings).values({
       id: crypto.randomUUID(),
       chartId: chart.id,

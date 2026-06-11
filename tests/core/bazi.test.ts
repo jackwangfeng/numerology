@@ -48,6 +48,12 @@ describe('computeBazi', () => {
     expect(chart.currentDaYun).toBe('壬午');
   });
 
+  it('未来三年流年为当年及之后两年（2026丙午/2027丁未/2028戊申），不含过去', () => {
+    expect(chart.upcomingYears.map((y) => y.year)).toEqual([2026, 2027, 2028]);
+    expect(chart.upcomingYears.map((y) => y.ganZhi)).toEqual(['丙午', '丁未', '戊申']);
+    expect(chart.upcomingYears[0].year).toBeGreaterThanOrEqual(NOW.getFullYear());
+  });
+
   it('整盘快照', () => {
     expect(chart).toMatchSnapshot();
   });

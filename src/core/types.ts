@@ -44,6 +44,8 @@ export interface BaziChart {
   daYun: DaYunItem[];
   currentDaYun: string | null;
   currentLiuNian: string;
+  /** 当年 + 未来两年的流年（命理只看未来，不回顾过去年份） */
+  upcomingYears: { year: number; age: number; ganZhi: string; daYun: string | null }[];
 }
 
 export interface ZiweiPalace {
