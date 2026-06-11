@@ -2,6 +2,10 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { CITIES } from '@/core/cities';
+import { VoiceInput } from './voice-input';
+import type { ParsedBirth } from '@/llm/parse-birth';
+
+const MISSING_LABELS: Record<string, string> = { gender: '性别', year: '年份', month: '月份', day: '日期', hour: '时辰' };
 
 const SHICHEN = ['子', '丑', '丑', '寅', '寅', '卯', '卯', '辰', '辰', '巳', '巳', '午', '午', '未', '未', '申', '申', '酉', '酉', '戌', '戌', '亥', '亥', '子'];
 
@@ -23,8 +27,52 @@ export function ChartForm() {
   });
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [smartText, setSmartText] = useState('');
+  const [parsing, setParsing] = useState(false);
+  const [parseHint, setParseHint] = useState('');
 
   const set = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) => setForm((f) => ({ ...f, [k]: v }));
+
+  async function smartFill() {
+    if (smartText.trim().length < 2 || parsing) return;
+    setParsing(true);
+    setParseHint('');
+    try {
+      const res = await fetch('/api/parse-birth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: smartText.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setParseHint(data.error ?? 'AI 识别失败，请重试');
+        return;
+      }
+      const p = data as ParsedBirth & { missing: string[] };
+      setForm((f) => ({
+        ...f,
+        name: p.name ?? f.name,
+        gender: p.gender ?? f.gender,
+        calendarType: p.calendarType ?? f.calendarType,
+        year: p.year ?? f.year,
+        month: p.month ?? f.month,
+        day: p.day ?? f.day,
+        hour: p.hour ?? f.hour,
+        minute: p.minute ?? f.minute,
+        isLeapMonth: p.isLeapMonth,
+        birthPlace: p.birthPlace ?? f.birthPlace,
+      }));
+      setParseHint(
+        p.missing.length
+          ? `已填入识别结果，请补充：${p.missing.map((m: string) => MISSING_LABELS[m] ?? m).join('、')}`
+          : '已填入识别结果，请核对后排盘',
+      );
+    } catch {
+      setParseHint('网络错误，请重试');
+    } finally {
+      setParsing(false);
+    }
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -46,6 +94,32 @@ export function ChartForm() {
 
   return (
     <form onSubmit={submit} className="space-y-5">
+      <div className="bg-panel border border-accent-dim/40 rounded-lg p-4">
+        <p className="text-sm text-accent mb-2">✨ 智能填写：说一句话或打一段字，AI 自动填表</p>
+        <div className="flex items-start gap-2">
+          <textarea
+            value={smartText}
+            onChange={(e) => setSmartText(e.target.value)}
+            maxLength={300}
+            rows={2}
+            placeholder="例：我是92年农历八月初八晚上十点一刻在上海出生的女生，叫小红"
+            className="flex-1 bg-stone-900 border border-line rounded px-3 py-2 text-sm outline-none focus:border-accent-dim resize-none"
+          />
+          <VoiceInput onText={(t) => setSmartText((s) => (s + t).slice(0, 300))} />
+        </div>
+        <div className="flex items-center justify-between mt-2">
+          <span className="text-xs text-stone-500">{parseHint}</span>
+          <button
+            type="button"
+            onClick={smartFill}
+            disabled={parsing || smartText.trim().length < 2}
+            className="px-4 py-1.5 rounded border border-accent-dim text-accent text-sm hover:bg-accent hover:text-stone-950 disabled:opacity-40 cursor-pointer"
+          >
+            {parsing ? '识别中…' : 'AI 识别填表'}
+          </button>
+        </div>
+      </div>
+
       <div className="grid grid-cols-2 gap-4">
         <label className="block">
           <span className="text-sm text-stone-400">姓名</span>

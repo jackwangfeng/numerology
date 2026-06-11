@@ -1,6 +1,7 @@
 'use client';
 import { useRef, useState } from 'react';
 import { readSse } from '@/lib/sse-client';
+import { VoiceInput } from './voice-input';
 
 interface Msg {
   role: 'user' | 'assistant';
@@ -76,14 +77,15 @@ export function ChatBox({ chartId, initialMessages }: { chartId: string; initial
         ))}
       </div>
       {error && <p className="text-red-400 text-sm mt-3">{error}</p>}
-      <form onSubmit={send} className="mt-4 flex gap-2">
+      <form onSubmit={send} className="mt-4 flex items-center gap-2">
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
           maxLength={500}
-          placeholder="问问 AI 命理师…"
+          placeholder="问问 AI 命理师…（支持语音）"
           className="flex-1 bg-stone-900 border border-line rounded px-4 py-2.5 text-sm outline-none focus:border-accent-dim"
         />
+        <VoiceInput onText={(t) => setInput((v) => (v + t).slice(0, 500))} />
         <button disabled={busy || !input.trim()} className="px-5 rounded bg-accent text-stone-950 text-sm font-medium hover:bg-amber-400 disabled:opacity-50 cursor-pointer">
           发送
         </button>
