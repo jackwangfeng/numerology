@@ -1,81 +1,101 @@
 'use client';
-import { useRef, useState, useSyncExternalStore } from 'react';
+import { useRef, useState } from 'react';
+import { floatTo16BitPcm, mergeChunks, resampleLinear } from '@/lib/pcm';
 
-type SpeechRecognitionLike = {
-  lang: string;
-  interimResults: boolean;
-  continuous: boolean;
-  start(): void;
-  stop(): void;
-  onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }> & { isFinal: boolean }> }) => void) | null;
-  onend: (() => void) | null;
-  onerror: ((e: { error: string }) => void) | null;
-};
+const TARGET_RATE = 16000;
+const MAX_SECONDS = 60;
 
-declare global {
-  interface Window {
-    SpeechRecognition?: new () => SpeechRecognitionLike;
-    webkitSpeechRecognition?: new () => SpeechRecognitionLike;
-  }
-}
+type Phase = 'idle' | 'recording' | 'busy';
 
 /**
- * 浏览器语音输入按钮（Web Speech API，zh-CN）。
- * 不支持的浏览器自动隐藏。识别出的最终文本通过 onText 回调。
+ * 语音输入按钮：浏览器录音 → 16k PCM → 服务端豆包流式识别。
+ * 识别出的文本通过 onText 回调。所有现代浏览器可用（需 HTTPS 或 localhost）。
  */
 export function VoiceInput({ onText }: { onText: (text: string) => void }) {
-  const supported = useSyncExternalStore(
-    () => () => {},
-    () => !!(window.SpeechRecognition || window.webkitSpeechRecognition),
-    () => false,
-  );
-  const [recording, setRecording] = useState(false);
+  const [phase, setPhase] = useState<Phase>('idle');
   const [error, setError] = useState('');
-  const recRef = useRef<SpeechRecognitionLike | null>(null);
+  const ctxRef = useRef<AudioContext | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const chunksRef = useRef<Float32Array[]>([]);
+  const rateRef = useRef(TARGET_RATE);
+  const stopTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  function toggle() {
-    if (recording) {
-      recRef.current?.stop();
-      return;
-    }
-    const Ctor = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!Ctor) return;
-    const rec = new Ctor();
-    rec.lang = 'zh-CN';
-    rec.interimResults = false;
-    rec.continuous = true;
-    rec.onresult = (e) => {
-      let text = '';
-      for (let i = 0; i < e.results.length; i++) {
-        const r = e.results[i];
-        if (r.isFinal) text += r[0].transcript;
-      }
-      if (text) onText(text);
-    };
-    rec.onerror = (e) => {
-      setError(e.error === 'not-allowed' ? '请允许麦克风权限' : '语音识别不可用，请打字输入');
-      setRecording(false);
-    };
-    rec.onend = () => setRecording(false);
-    recRef.current = rec;
+  async function start() {
     setError('');
-    setRecording(true);
-    rec.start();
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true },
+      });
+      const ctx = new AudioContext();
+      const source = ctx.createMediaStreamSource(stream);
+      const processor = ctx.createScriptProcessor(4096, 1, 1);
+      chunksRef.current = [];
+      rateRef.current = ctx.sampleRate;
+      processor.onaudioprocess = (e) => {
+        chunksRef.current.push(new Float32Array(e.inputBuffer.getChannelData(0)));
+      };
+      source.connect(processor);
+      processor.connect(ctx.destination);
+      ctxRef.current = ctx;
+      streamRef.current = stream;
+      setPhase('recording');
+      stopTimerRef.current = setTimeout(stop, MAX_SECONDS * 1000);
+    } catch {
+      setError('无法使用麦克风，请检查权限');
+    }
   }
 
-  if (!supported) return null;
+  async function stop() {
+    if (stopTimerRef.current) clearTimeout(stopTimerRef.current);
+    streamRef.current?.getTracks().forEach((t) => t.stop());
+    await ctxRef.current?.close().catch(() => {});
+    ctxRef.current = null;
+    streamRef.current = null;
+
+    const merged = mergeChunks(chunksRef.current);
+    chunksRef.current = [];
+    if (merged.length / rateRef.current < 0.3) {
+      setPhase('idle');
+      setError('没听清，请再说一次');
+      return;
+    }
+    setPhase('busy');
+    try {
+      const pcm = floatTo16BitPcm(resampleLinear(merged, rateRef.current, TARGET_RATE));
+      const res = await fetch('/api/asr', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/octet-stream' },
+        body: pcm,
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? '识别失败，请重试');
+      } else if (data.text) {
+        onText(data.text);
+      } else {
+        setError('没听清，请再说一次');
+      }
+    } catch {
+      setError('网络错误，请重试');
+    } finally {
+      setPhase('idle');
+    }
+  }
 
   return (
     <span className="inline-flex items-center gap-2">
       <button
         type="button"
-        onClick={toggle}
-        title={recording ? '停止录音' : '语音输入'}
+        onClick={phase === 'recording' ? stop : phase === 'idle' ? start : undefined}
+        disabled={phase === 'busy'}
+        title={phase === 'recording' ? '停止并识别' : '语音输入'}
         className={`shrink-0 w-10 h-10 rounded-full border flex items-center justify-center cursor-pointer transition-colors ${
-          recording ? 'border-red-400 text-red-400 animate-pulse' : 'border-line text-stone-400 hover:border-accent-dim hover:text-accent'
+          phase === 'recording'
+            ? 'border-red-400 text-red-400 animate-pulse'
+            : 'border-line text-stone-400 hover:border-accent-dim hover:text-accent disabled:opacity-50'
         }`}
       >
-        {recording ? '■' : '🎙'}
+        {phase === 'recording' ? '■' : phase === 'busy' ? '…' : '🎙'}
       </button>
       {error && <span className="text-xs text-red-400">{error}</span>}
     </span>
