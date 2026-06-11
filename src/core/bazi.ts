@@ -1,5 +1,5 @@
 import { Solar } from 'lunar-typescript';
-import type { BaziChart, BirthInput, Pillar } from './types';
+import type { BaziChart, BirthInput, DaYunItem, Pillar } from './types';
 import { toPaipanSolar } from './calendar';
 import { computeShenSha } from './shensha';
 
@@ -9,6 +9,28 @@ const GAN_WUXING: Record<string, string> = {
 const ZHI_WUXING: Record<string, string> = {
   子: '水', 丑: '土', 寅: '木', 卯: '木', 辰: '土', 巳: '火', 午: '火', 未: '土', 申: '金', 酉: '金', 戌: '土', 亥: '水',
 };
+
+/**
+ * 流年只看未来：当年 + 未来两年。每年取年中（6/1，必过立春）算干支并标注所属大运。
+ * 抽成独立函数，供老命盘（快照缺该字段）在读取时实时兜底重建。
+ */
+export function computeUpcomingYears(
+  daYun: DaYunItem[],
+  birthYear: number,
+  now: Date,
+): BaziChart['upcomingYears'] {
+  const nowYear = now.getFullYear();
+  return [0, 1, 2].map((offset) => {
+    const year = nowYear + offset;
+    const dy = daYun.find((d) => d.startYear <= year && year < d.startYear + 10);
+    return {
+      year,
+      age: year - birthYear + 1, // 虚岁
+      ganZhi: Solar.fromYmd(year, 6, 1).getLunar().getYearInGanZhiByLiChun(),
+      daYun: dy?.ganZhi ?? null,
+    };
+  });
+}
 
 export function computeBazi(input: BirthInput, now: Date): BaziChart {
   const solar = toPaipanSolar(input);
@@ -45,19 +67,7 @@ export function computeBazi(input: BirthInput, now: Date): BaziChart {
 
   const nowYear = now.getFullYear();
   const current = daYun.find((d) => d.startYear <= nowYear && nowYear < d.startYear + 10);
-
-  // 流年只看未来：当年 + 未来两年。每年取年中（6/1，必过立春）算干支，并标注所属大运。
-  const birthYear = solar.getYear();
-  const upcomingYears = [0, 1, 2].map((offset) => {
-    const year = nowYear + offset;
-    const dy = daYun.find((d) => d.startYear <= year && year < d.startYear + 10);
-    return {
-      year,
-      age: year - birthYear + 1, // 虚岁
-      ganZhi: Solar.fromYmd(year, 6, 1).getLunar().getYearInGanZhiByLiChun(),
-      daYun: dy?.ganZhi ?? null,
-    };
-  });
+  const upcomingYears = computeUpcomingYears(daYun, solar.getYear(), now);
 
   return {
     solarDateTime: solar.toYmdHms(),

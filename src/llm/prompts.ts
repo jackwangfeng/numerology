@@ -10,6 +10,7 @@ export const SYSTEM_PROMPT = `你是一位精通八字命理与紫微斗数的�
 3. 严禁宿命论恐吓，严禁预言具体的灾祸、伤亡、疾病死期。涉及健康只做养生提醒。
 4. 输出使用 Markdown，遵循用户消息中要求的章节结构。
 5. 报告末尾固定附一行：「以上内容基于传统命理学说生成，仅供参考娱乐，不构成任何医疗、投资或重大决策建议。」
+6. 【年份铁律】当前年份以命盘数据中【当前日期】标注的公历年为准。分析流年运势时，只能分析当年及未来的年份，绝对不要分析或回顾已经过去的年份。命盘已给出"未来三年流年"的准确公历年与干支对应关系，务必照此输出，不要凭记忆自行换算干支对应的公历年。即使历史对话或既往报告里出现过更早的年份（如往年的分析），也一律忽略，以命盘给定的未来三年为准。
 
 追问环节：用户可能继续就命盘提问，回答时同样遵守上述要求，并紧扣命盘数据。`;
 
@@ -18,12 +19,14 @@ export interface Profile {
   gender: Gender;
 }
 
-export function renderChartText(bazi: BaziChart, ziwei: ZiweiChart, profile: Profile): string {
+export function renderChartText(bazi: BaziChart, ziwei: ZiweiChart, profile: Profile, now?: Date): string {
   const p = bazi.pillars;
   const pillarLine = (label: string, x: typeof p.year) =>
     `${label}：${x.ganZhi}　十神：${x.shiShenGan}　藏干：${x.hideGan.join('、')}（${x.shiShenZhi.join('、')}）`;
 
+  const today = now ?? new Date();
   const lines: string[] = [
+    `【当前日期】${today.getFullYear()}年${today.getMonth() + 1}月${today.getDate()}日（解读流年时以此为今年，只看当年及未来，不要分析已过去的年份）`,
     `【命主】${profile.name}，${profile.gender}`,
     `【排盘公历时间（已含真太阳时校正）】${bazi.solarDateTime}`,
     `【农历】${bazi.lunarDateText}`,
@@ -41,9 +44,13 @@ export function renderChartText(bazi: BaziChart, ziwei: ZiweiChart, profile: Pro
     `起运：${bazi.yun.startAge} 岁（${bazi.yun.startYear} 年）起，${bazi.yun.forward ? '顺行' : '逆行'}`,
     `大运：${bazi.daYun.map((d) => `${d.ganZhi}(${d.startAge}岁/${d.startYear}年)`).join(' → ')}`,
     `当前大运：${bazi.currentDaYun ?? '未起运'}　当前流年：${bazi.currentLiuNian}`,
-    `未来三年流年（只解读这几年，不要回顾更早的过去年份）：${bazi.upcomingYears
-      .map((y, i) => `${y.year}年(${y.ganZhi}/虚岁${y.age}/大运${y.daYun ?? '未起运'})${i === 0 ? '【今年】' : ''}`)
-      .join('　')}`,
+    ...(bazi.upcomingYears?.length
+      ? [
+          `未来三年流年（只解读这几年，不要回顾更早的过去年份）：${bazi.upcomingYears
+            .map((y, i) => `${y.year}年(${y.ganZhi}/虚岁${y.age}/大运${y.daYun ?? '未起运'})${i === 0 ? '【今年】' : ''}`)
+            .join('　')}`,
+        ]
+      : []),
     '',
     '━━ 紫微斗数命盘 ━━',
     `五行局：${ziwei.fiveElementsClass}　命宫：${ziwei.soulPalaceBranch}　身宫：${ziwei.bodyPalaceBranch}`,

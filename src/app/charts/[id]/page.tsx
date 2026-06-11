@@ -3,12 +3,12 @@ import { asc, desc, eq } from 'drizzle-orm';
 import { db } from '@/db';
 import { messages, readings } from '@/db/schema';
 import { getUser } from '@/lib/session';
-import { ownedChart } from '@/lib/charts';
+import { ownedChart, parseBazi } from '@/lib/charts';
 import { BaziTable } from '@/components/bazi-table';
 import { ZiweiGrid } from '@/components/ziwei-grid';
 import { ReportSection } from '@/components/report-section';
 import { ChatBox } from '@/components/chat-box';
-import type { BaziChart, ZiweiChart } from '@/core/types';
+import type { ZiweiChart } from '@/core/types';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,7 +20,7 @@ export default async function ChartDetailPage({ params }: { params: Promise<{ id
   const chart = await ownedChart(id, user.id);
   if (!chart) notFound();
 
-  const bazi = JSON.parse(chart.baziData) as BaziChart;
+  const bazi = parseBazi(chart.baziData, new Date());
   const ziwei = JSON.parse(chart.ziweiData) as ZiweiChart;
 
   const [latestReading] = await db

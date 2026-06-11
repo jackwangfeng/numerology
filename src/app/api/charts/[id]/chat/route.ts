@@ -4,14 +4,14 @@ import { z } from 'zod';
 import { db } from '@/db';
 import { chartMemories, charts, messages, readings } from '@/db/schema';
 import { getUser } from '@/lib/session';
-import { ownedChart } from '@/lib/charts';
+import { ownedChart, parseBazi } from '@/lib/charts';
 import { sseResponse } from '@/lib/sse';
 import { buildChatMessages, renderChartText, type ChatMemory } from '@/llm/prompts';
 import { streamChat } from '@/llm/ark';
 import { checkAndConsumeQuota } from '@/llm/quota';
 import { bufToVec, embedText, topKByCosine, vecToBuf } from '@/llm/embeddings';
 import { extractNewFacts, summarizeHistory, type RoundMessage } from '@/llm/memory';
-import type { BaziChart, Gender, ZiweiChart } from '@/core/types';
+import type { Gender, ZiweiChart } from '@/core/types';
 
 const bodySchema = z.object({ content: z.string().min(1).max(500) });
 
@@ -95,9 +95,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     .limit(1);
 
   const chartText = renderChartText(
-    JSON.parse(chart.baziData) as BaziChart,
+    parseBazi(chart.baziData, new Date()),
     JSON.parse(chart.ziweiData) as ZiweiChart,
     { name: chart.name, gender: chart.gender as Gender },
+    new Date(),
   );
 
   const chatMsgs = buildChatMessages(chartText, latestReading?.content ?? null, [...recent, { role: 'user', content: question }], memory);

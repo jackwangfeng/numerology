@@ -15,7 +15,7 @@ const input: BirthInput = {
   isLeapMonth: false,
 };
 const { bazi, ziwei } = computeCharts(input, new Date(2026, 5, 11));
-const chartText = renderChartText(bazi, ziwei, { name: '张三', gender: '男' });
+const chartText = renderChartText(bazi, ziwei, { name: '张三', gender: '男' }, new Date(2026, 5, 11));
 
 describe('renderChartText', () => {
   it('包含四柱、宫名与命主信息', () => {
@@ -24,6 +24,7 @@ describe('renderChartText', () => {
     expect(chartText).toContain('命宫');
     expect(chartText).toContain('五行局');
     expect(chartText).toContain('当前流年：丙午');
+    expect(chartText).toContain('当前日期】2026年6月11日');
   });
 });
 

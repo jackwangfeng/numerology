@@ -2,12 +2,12 @@ import { desc, eq } from 'drizzle-orm';
 import { db } from '@/db';
 import { chartMemories, readings } from '@/db/schema';
 import { getUser } from '@/lib/session';
-import { ownedChart } from '@/lib/charts';
+import { ownedChart, parseBazi } from '@/lib/charts';
 import { sseResponse } from '@/lib/sse';
 import { buildReportMessages, renderChartText } from '@/llm/prompts';
 import { arkModel, streamChat } from '@/llm/ark';
 import { checkAndConsumeQuota } from '@/llm/quota';
-import type { BaziChart, Gender, ZiweiChart } from '@/core/types';
+import type { Gender, ZiweiChart } from '@/core/types';
 
 export async function POST(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await getUser();
@@ -22,8 +22,9 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
     return Response.json({ error: `今日解读次数已用完（${quota.limit} 次），明天再来吧` }, { status: 429 });
   }
 
-  const bazi = JSON.parse(chart.baziData) as BaziChart;
-  const chartText = renderChartText(bazi, JSON.parse(chart.ziweiData) as ZiweiChart, { name: chart.name, gender: chart.gender as Gender });
+  const now = new Date();
+  const bazi = parseBazi(chart.baziData, now);
+  const chartText = renderChartText(bazi, JSON.parse(chart.ziweiData) as ZiweiChart, { name: chart.name, gender: chart.gender as Gender }, now);
 
   // 重新生成报告时带上命主事实库，越用越懂命主
   const facts = await db
