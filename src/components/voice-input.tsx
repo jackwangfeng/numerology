@@ -22,10 +22,12 @@ export function VoiceInput({ onText }: { onText: (text: string) => void }) {
 
   async function start() {
     setError('');
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setError('当前环境不支持录音（需 HTTPS 或 localhost）');
+      return;
+    }
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true },
-      });
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const ctx = new AudioContext();
       const source = ctx.createMediaStreamSource(stream);
       const processor = ctx.createScriptProcessor(4096, 1, 1);
@@ -40,8 +42,13 @@ export function VoiceInput({ onText }: { onText: (text: string) => void }) {
       streamRef.current = stream;
       setPhase('recording');
       stopTimerRef.current = setTimeout(stop, MAX_SECONDS * 1000);
-    } catch {
-      setError('无法使用麦克风，请检查权限');
+    } catch (e) {
+      const name = (e as DOMException)?.name;
+      if (name === 'NotAllowedError') setError('麦克风被浏览器拦截：点地址栏左侧图标，把麦克风改为「允许」后重试');
+      else if (name === 'NotFoundError' || name === 'DevicesNotFoundError') setError('未检测到麦克风设备');
+      else if (name === 'NotReadableError') setError('麦克风被其他程序占用，请关闭后重试');
+      else setError(`无法录音：${name || (e as Error)?.message || '未知错误'}`);
+      setPhase('idle');
     }
   }
 
