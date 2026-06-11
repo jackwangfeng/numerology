@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { CITIES } from '@/core/cities';
 import { VoiceInput } from './voice-input';
@@ -28,6 +28,7 @@ export function ChartForm() {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [smartText, setSmartText] = useState('');
+  const voiceBaseRef = useRef(''); // 录音开始时的文本基线，流式 partial 在其后替换式拼接
   const [parsing, setParsing] = useState(false);
   const [parseHint, setParseHint] = useState('');
 
@@ -105,7 +106,12 @@ export function ChartForm() {
             placeholder="例：我是92年农历八月初八晚上十点一刻在上海出生的女生，叫小红"
             className="flex-1 bg-stone-900 border border-line rounded px-3 py-2 text-sm outline-none focus:border-accent-dim resize-none"
           />
-          <VoiceInput onText={(t) => setSmartText((s) => (s + t).slice(0, 300))} />
+          <VoiceInput
+            onStart={() => {
+              voiceBaseRef.current = smartText;
+            }}
+            onText={(t) => setSmartText((voiceBaseRef.current + t).slice(0, 300))}
+          />
         </div>
         <div className="flex items-center justify-between mt-2">
           <span className="text-xs text-stone-500">{parseHint}</span>

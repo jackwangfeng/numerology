@@ -14,6 +14,7 @@ export function ChatBox({ chartId, initialMessages }: { chartId: string; initial
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const listRef = useRef<HTMLDivElement>(null);
+  const voiceBaseRef = useRef(''); // 录音开始时的输入框内容，流式 partial 在其后替换式拼接
 
   const scrollDown = () => requestAnimationFrame(() => listRef.current?.scrollTo({ top: listRef.current.scrollHeight }));
 
@@ -85,7 +86,12 @@ export function ChatBox({ chartId, initialMessages }: { chartId: string; initial
           placeholder="问问 AI 命理师…（支持语音）"
           className="flex-1 bg-stone-900 border border-line rounded px-4 py-2.5 text-sm outline-none focus:border-accent-dim"
         />
-        <VoiceInput onText={(t) => setInput((v) => (v + t).slice(0, 500))} />
+        <VoiceInput
+          onStart={() => {
+            voiceBaseRef.current = input;
+          }}
+          onText={(t) => setInput((voiceBaseRef.current + t).slice(0, 500))}
+        />
         <button disabled={busy || !input.trim()} className="px-5 rounded bg-accent text-stone-950 text-sm font-medium hover:bg-amber-400 disabled:opacity-50 cursor-pointer">
           发送
         </button>
