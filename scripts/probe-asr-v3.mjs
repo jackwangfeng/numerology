@@ -9,7 +9,7 @@ for (const line of fs.readFileSync('.env.local', 'utf8').split('\n')) {
 }
 
 const TOKEN = process.env.ASR_API_KEY;
-const APPID = process.env.ASR_APP_ID || '7082246580';
+const APPID = process.env.ASR_APP_ID || '';
 const AUTH_MODE = process.argv[2] || 'pair'; // pair | xapikey
 const RID = process.argv[3] || 'volc.bigasr.sauc.duration';
 const WAV = process.argv[4] || '/tmp/probe.pcm';
