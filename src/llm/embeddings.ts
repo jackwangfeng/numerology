@@ -1,21 +1,30 @@
-import { arkClient } from './ark';
-
 export function embeddingModel(): string {
-  return process.env.ARK_EMBEDDING_MODEL || 'doubao-embedding-text-240715';
+  return process.env.ARK_EMBEDDING_MODEL || 'doubao-embedding-vision-250615';
 }
 
 /**
- * 文本向量化。embedding 模型未在方舟开通或调用失败时返回 null，
+ * 文本向量化，走方舟多模态 embedding 端点（doubao-embedding-vision 系列
+ * 不支持 OpenAI 兼容的 /embeddings）。模型未开通或调用失败时返回 null，
  * 调用方应静默降级（跳过向量召回，不影响其余记忆层）。
  */
 export async function embedText(text: string): Promise<Float32Array | null> {
   try {
-    const res = await arkClient().embeddings.create({
-      model: embeddingModel(),
-      input: text.slice(0, 1000),
+    const base = process.env.ARK_BASE_URL || 'https://ark.cn-beijing.volces.com/api/v3';
+    const res = await fetch(`${base}/embeddings/multimodal`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${process.env.ARK_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: embeddingModel(),
+        input: [{ type: 'text', text: text.slice(0, 1000) }],
+      }),
     });
-    const v = res.data[0]?.embedding;
-    return v ? Float32Array.from(v) : null;
+    if (!res.ok) return null;
+    const json = (await res.json()) as { data?: { embedding?: number[] } | { embedding?: number[] }[] };
+    const v = Array.isArray(json.data) ? json.data[0]?.embedding : json.data?.embedding;
+    return v?.length ? Float32Array.from(v) : null;
   } catch {
     return null;
   }
