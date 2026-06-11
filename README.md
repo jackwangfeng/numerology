@@ -67,6 +67,10 @@ docs/superpowers/  设计文档与实现计划
 - 设计：`docs/superpowers/specs/2026-06-11-suanming-app-design.md`
 - 实现计划：`docs/superpowers/plans/2026-06-11-suanming-v1.md`
 
+## 许可证
+
+[MIT](./LICENSE)
+
 ---
 
 应用内所有解读由 AI 基于传统命理学说生成，仅供参考娱乐。
