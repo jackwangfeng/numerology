@@ -2,6 +2,8 @@
 
 八字 + 紫微斗数排盘，豆包大模型深度解读的 Web 应用。
 
+🔮 **在线体验：[numerology.recompdaily.com](https://numerology.recompdaily.com)**
+
 - **排盘零自研零误差**：八字四柱由 [lunar-typescript](https://github.com/6tail/lunar-typescript) 计算，紫微十二宫由 [iztro](https://github.com/SylarLong/iztro) 计算；支持公历/农历（含闰月）输入与真太阳时经度校正。大模型只负责解读，不碰历法推算。
 - **AI 解读**：完整结构化命盘（四柱十神藏干、十步大运、流年、紫微十二宫四化）喂给豆包，流式生成六章节解读报告，并支持随盘追问对话。
 - **账号与历史**：邮箱密码登录（better-auth），命盘、报告、对话全部持久化，可随时回看。
