@@ -57,12 +57,13 @@ export function renderChartText(bazi: BaziChart, ziwei: ZiweiChart, profile: Pro
 
 export type ChatMessage = { role: 'system' | 'user' | 'assistant'; content: string };
 
-export function buildReportMessages(chartText: string): ChatMessage[] {
+export function buildReportMessages(chartText: string, facts: string[] = []): ChatMessage[] {
+  const factsBlock = facts.length ? `\n\n【命主长期记忆（来自历史咨询，解读时请结合）】\n${facts.join('\n')}` : '';
   return [
     { role: 'system', content: SYSTEM_PROMPT },
     {
       role: 'user',
-      content: `${chartText}
+      content: `${chartText}${factsBlock}
 
 请基于以上命盘出具完整解读报告（Markdown），按以下章节组织：
 ## 命局总评
@@ -78,14 +79,36 @@ export function buildReportMessages(chartText: string): ChatMessage[] {
 const MAX_HISTORY = 20;
 const MAX_REPORT_CHARS = 3000;
 
+/** 三层记忆：事实库 + 滚动摘要 + 向量召回的远期对话片段 */
+export interface ChatMemory {
+  facts: string[];
+  summary: string | null;
+  recalled: { role: 'user' | 'assistant'; content: string }[];
+}
+
 export function buildChatMessages(
   chartText: string,
   report: string | null,
   history: { role: 'user' | 'assistant'; content: string }[],
+  memory?: ChatMemory,
 ): ChatMessage[] {
+  const blocks: string[] = [chartText];
+  if (memory?.facts.length) {
+    blocks.push(`【命主长期记忆（来自历史咨询）】\n${memory.facts.join('\n')}`);
+  }
+  if (memory?.summary) {
+    blocks.push(`【更早对话摘要】\n${memory.summary}`);
+  }
+  if (memory?.recalled.length) {
+    blocks.push(
+      `【与本次提问相关的远期对话片段】\n${memory.recalled
+        .map((m) => `${m.role === 'user' ? '命主曾问' : '当时答复'}：${m.content.slice(0, 200)}`)
+        .join('\n')}`,
+    );
+  }
   const msgs: ChatMessage[] = [
     { role: 'system', content: SYSTEM_PROMPT },
-    { role: 'user', content: `${chartText}\n\n以下是围绕这张命盘的咨询对话。` },
+    { role: 'user', content: `${blocks.join('\n\n')}\n\n以下是围绕这张命盘的咨询对话。` },
   ];
   if (report) {
     msgs.push({ role: 'assistant', content: `此前我已出具解读报告如下：\n${report.slice(0, MAX_REPORT_CHARS)}` });

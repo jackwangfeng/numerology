@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, blob } from 'drizzle-orm/sqlite-core';
 
 // ---------- better-auth ----------
 export const user = sqliteTable('user', {
@@ -63,6 +63,10 @@ export const charts = sqliteTable('charts', {
   birthPlace: text('birth_place'),
   baziData: text('bazi_data').notNull(), // BaziChart JSON
   ziweiData: text('ziwei_data').notNull(), // ZiweiChart JSON
+  /** 记忆第一层：更早对话的滚动摘要 */
+  memorySummary: text('memory_summary'),
+  /** 已并入摘要的最早消息条数 */
+  summarizedCount: integer('summarized_count').notNull().default(0),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
 });
 
@@ -78,6 +82,16 @@ export const messages = sqliteTable('messages', {
   id: text('id').primaryKey(),
   chartId: text('chart_id').notNull().references(() => charts.id, { onDelete: 'cascade' }),
   role: text('role').notNull(), // 'user' | 'assistant'
+  content: text('content').notNull(),
+  /** 记忆第三层：消息向量（Float32 BLOB），embedding 模型未开通时为 null */
+  embedding: blob('embedding', { mode: 'buffer' }),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+});
+
+/** 记忆第二层：命主事实库（挂命盘不挂账号，避免多命主串记忆） */
+export const chartMemories = sqliteTable('chart_memories', {
+  id: text('id').primaryKey(),
+  chartId: text('chart_id').notNull().references(() => charts.id, { onDelete: 'cascade' }),
   content: text('content').notNull(),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
 });

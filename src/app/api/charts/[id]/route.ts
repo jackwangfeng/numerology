@@ -18,7 +18,11 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     .where(eq(readings.chartId, id))
     .orderBy(desc(readings.createdAt))
     .limit(1);
-  const msgs = await db.select().from(messages).where(eq(messages.chartId, id)).orderBy(asc(messages.createdAt));
+  const msgs = await db
+    .select({ id: messages.id, role: messages.role, content: messages.content, createdAt: messages.createdAt })
+    .from(messages)
+    .where(eq(messages.chartId, id))
+    .orderBy(asc(messages.createdAt));
 
   return Response.json({ ...chart, latestReading: latestReading ?? null, messages: msgs });
 }

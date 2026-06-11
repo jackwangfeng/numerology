@@ -1,5 +1,6 @@
+import { desc, eq } from 'drizzle-orm';
 import { db } from '@/db';
-import { readings } from '@/db/schema';
+import { chartMemories, readings } from '@/db/schema';
 import { getUser } from '@/lib/session';
 import { ownedChart } from '@/lib/charts';
 import { sseResponse } from '@/lib/sse';
@@ -27,7 +28,15 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
     { name: chart.name, gender: chart.gender as Gender },
   );
 
-  return sseResponse(streamChat(buildReportMessages(chartText)), async (full) => {
+  // 重新生成报告时带上命主事实库，越用越懂命主
+  const facts = await db
+    .select({ content: chartMemories.content })
+    .from(chartMemories)
+    .where(eq(chartMemories.chartId, chart.id))
+    .orderBy(desc(chartMemories.createdAt))
+    .limit(20);
+
+  return sseResponse(streamChat(buildReportMessages(chartText, facts.map((f) => f.content).reverse())), async (full) => {
     await db.insert(readings).values({
       id: crypto.randomUUID(),
       chartId: chart.id,

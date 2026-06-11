@@ -3,6 +3,10 @@ import type { ChatMessage } from './prompts';
 
 let client: OpenAI | null = null;
 
+export function arkClient(): OpenAI {
+  return getClient();
+}
+
 function getClient(): OpenAI {
   if (!client) {
     if (!process.env.ARK_API_KEY) throw new Error('ARK_API_KEY 未配置');
